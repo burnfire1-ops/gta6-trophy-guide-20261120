@@ -229,7 +229,7 @@ function renderRoadmap() {
   const meta = document.createElement('p');
   meta.textContent = `${s.total_trophies} trophies · ${s.grades.platinum} platinum, ${s.grades.gold} gold, ${s.grades.silver} silver, ${s.grades.bronze} bronze · ${s.hidden} hidden · ${s.online_trophies} online trophies · ${s.playthroughs} playthrough`;
   const time = document.createElement('p');
-  time.textContent = s.time_estimate;
+  time.textContent = `Time estimate (cited range, not a promise): ${s.time_estimate}`;
   const diff = document.createElement('p');
   diff.textContent = `Difficulty: ${s.difficulty}`;
   const ul = document.createElement('ul');
@@ -242,6 +242,8 @@ function renderRoadmap() {
 
   const stagesEl = $('roadmap-stages');
   stagesEl.replaceChildren();
+  // Manual-save rule, verbatim from roadmap.json summary.rules — shown on every chapter stage.
+  const saveRule = (s.rules || []).find((r) => r.includes('manual save'));
   for (const st of roadmapDoc.stages) {
     const li = document.createElement('li');
     const h3 = document.createElement('h3');
@@ -260,6 +262,12 @@ function renderRoadmap() {
     b.textContent = `${earnedIn}/${st.trophies.length} earned: `;
     tr.append(b, document.createTextNode(st.trophies.map((id) => byId.get(id)?.name ?? id).join(', ')));
     li.append(h3, focus, tr);
+    if (saveRule && st.title.startsWith('Chapter')) {
+      const save = document.createElement('p');
+      save.className = 'save-note';
+      save.textContent = `Manual save: ${saveRule}`;
+      li.append(save);
+    }
     if (st.notes && st.notes.length) {
       const notes = document.createElement('ul');
       for (const note of st.notes) {
@@ -279,36 +287,117 @@ function renderRoadmap() {
   }
 }
 
+// Missable grid (M3): one row per flagged trophy — chapter, mission/moment,
+// trophy, when it can be missed, tier. Mission + "when" text is paraphrased
+// from that trophy's own steps/tips in trophies.json; nothing new is claimed.
+// Unconfirmed trophies stay in WATCH, never MISSABLE.
+const MISSABLE_DETAIL = {
+  28: {
+    mission: 'Down to Earth → balcony meditation at Jason\u2019s house',
+    when: 'The invitation becomes unavailable after leaving Chapter 1; whether the balcony spot is required is still unconfirmed.',
+  },
+  34: {
+    mission: 'Free-roam with your partner — rob shops',
+    when: 'If the Wanted Level drops between shops, the back-to-back chain breaks.',
+  },
+  39: {
+    mission: 'Yasmani\u2019s Jewelry Jobs (Chapter 3) unlocks the Snap Gun → jewelry store robbery',
+    when: 'One alarm, or being spotted, fails the run — save before trying.',
+  },
+  48: {
+    mission: 'Free-roam — Criminal Profile actions across play',
+    when: 'The 500-action count is long and opaque; check the Criminal Profile screen regularly.',
+  },
+};
+
 function renderMissables() {
   const wrap = $('missable-list');
   wrap.replaceChildren();
-  const flagged = trophies.filter((t) => t.missable_status !== 'not-missable');
+  const flagged = trophies
+    .filter((t) => t.missable_status !== 'not-missable')
+    .sort((a, b) => STAGE_ORDER.indexOf(a.stage) - STAGE_ORDER.indexOf(b.stage) || a.id - b.id);
+  const missableCount = flagged.filter((t) => t.missable_status === 'missable').length;
+  const watchCount = flagged.filter((t) => t.missable_status === 'watch').length;
+  const safeCount = trophies.length - flagged.length;
+
+  const counts = document.createElement('p');
+  counts.className = 'missable-counts';
+  counts.textContent = `${missableCount} missable · ${watchCount} watch · ${safeCount} safe — counted from trophies.json, not guessed.`;
+  wrap.append(counts);
+
+  const legend = document.createElement('div');
+  legend.className = 'missable-legend';
+  for (const [cls, label, def] of [
+    ['badge-missable', 'MISSABLE', 'can be lost for this playthrough if the moment passes'],
+    ['badge-watch', 'WATCH', 'a failable moment — retryable with a manual save, not yet confirmed missable'],
+    ['badge-safe', 'AMAN', 'cannot be missed; earnable in free-roam cleanup after the story'],
+  ]) {
+    const item = document.createElement('p');
+    const b = document.createElement('span');
+    b.className = `badge ${cls}`;
+    b.textContent = label;
+    item.append(b, document.createTextNode(` — ${def}`));
+    legend.append(item);
+  }
+  wrap.append(legend);
+
+  const table = document.createElement('table');
+  table.className = 'missable-table';
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  for (const h of ['Chapter', 'Mission / moment', 'Trophy', 'When it can be missed', 'Tier']) {
+    const th = document.createElement('th');
+    th.textContent = h;
+    headRow.append(th);
+  }
+  thead.append(headRow);
+  table.append(thead);
+  const tbody = document.createElement('tbody');
   for (const t of flagged) {
-    const card = document.createElement('article');
-    card.className = 'missable-card' + (t.missable_status === 'watch' ? ' watch' : '');
-    const h3 = document.createElement('h3');
-    h3.textContent = hiddenNow(t) ? 'Hidden trophy' : t.name;
-    const tier = document.createElement('p');
-    tier.innerHTML = '';
-    const tierB = document.createElement('b');
-    tierB.textContent = t.missable_status === 'missable' ? 'MISSABLE' : 'WATCH';
-    tier.append(tierB, document.createTextNode(` · ${t.grade} · ${STAGE_LABEL[t.stage] || t.stage} · ${KIND_LABEL[t.kind] || t.kind}`));
-    const desc = document.createElement('p');
-    desc.textContent = hiddenNow(t) ? 'Hidden trophy — earn to reveal' : t.description;
-    const guide = document.createElement('p');
-    guide.textContent = t.guide;
-    card.append(h3, tier, desc, guide);
+    const d = MISSABLE_DETAIL[t.id] || { mission: '—', when: t.guide };
+    const row = document.createElement('tr');
+    row.className = t.missable_status === 'missable' ? 'row-missable' : 'row-watch';
+
+    const chapter = document.createElement('td');
+    chapter.textContent = t.stage === 'cleanup' ? 'Cleanup (free-roam)' : (STAGE_LABEL[t.stage] || t.stage);
+    const mission = document.createElement('td');
+    mission.textContent = d.mission;
+    const trophy = document.createElement('td');
+    const tName = document.createElement('b');
+    tName.textContent = hiddenNow(t) ? 'Hidden trophy' : t.name;
+    const tDesc = document.createElement('div');
+    tDesc.className = 'missable-desc';
+    tDesc.textContent = hiddenNow(t) ? 'Hidden trophy — earn to reveal' : t.description;
+    trophy.append(tName, tDesc);
+    const when = document.createElement('td');
+    when.textContent = d.when + ' ';
+    for (const c of t.sources || []) {
+      const cite = document.createElement('span');
+      cite.className = 'cite';
+      cite.textContent = `[${c}]`;
+      cite.title = sourceName(c);
+      when.append(cite, document.createTextNode(' '));
+    }
     if (t.confirm_status === 'unconfirmed') {
-      const flag = document.createElement('p');
+      const flag = document.createElement('div');
       flag.className = 'guide-flag';
       flag.textContent = 'Belum dicek — not yet confirmed in the game.';
-      card.append(flag);
+      when.append(flag);
     }
-    wrap.append(card);
+    const tier = document.createElement('td');
+    const tierBadge = document.createElement('span');
+    tierBadge.className = `badge ${t.missable_status === 'missable' ? 'badge-missable' : 'badge-watch'}`;
+    tierBadge.textContent = t.missable_status === 'missable' ? 'MISSABLE' : 'WATCH';
+    tier.append(tierBadge);
+    row.append(chapter, mission, trophy, when, tier);
+    tbody.append(row);
   }
+  table.append(tbody);
+  wrap.append(table);
+
   const safe = document.createElement('p');
   safe.className = 'missable-safe';
-  safe.textContent = `The other ${trophies.length - flagged.length} trophies are not missable: they can all be earned in free-roam cleanup after the story.`;
+  safe.textContent = `The other ${safeCount} trophies are not missable: they can all be earned in free-roam cleanup after the story.`;
   wrap.append(safe);
 }
 
