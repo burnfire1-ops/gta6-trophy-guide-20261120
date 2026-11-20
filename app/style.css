@@ -25,7 +25,6 @@ body {
   font-size: 15px;
   line-height: 1.45;
 }
-a { color: var(--cyan); }
 
 /* Header */
 .site-header {
@@ -38,9 +37,6 @@ a { color: var(--cyan); }
   border-bottom: 3px solid var(--orange);
 }
 .site-header h1 { margin: 0; font-size: 28px; line-height: 1.1; color: var(--cream); letter-spacing: .5px; }
-/* R2-M5 distinctiveness: one warm sunset touch — sand-to-orange gradient
-   on the title, inside @supports so browsers without background-clip:text
-   keep the solid cream title. Dark theme untouched otherwise. */
 @supports ((background-clip: text) or (-webkit-background-clip: text)) {
   .site-header h1 {
     background: linear-gradient(90deg, var(--sand) 0%, var(--orange) 100%);
@@ -49,8 +45,6 @@ a { color: var(--cyan); }
 }
 .tagline { margin: 1px 0 0; font-size: 16px; font-weight: 700; color: var(--sand); }
 .subline { margin: 1px 0 0; font-size: 13px; color: var(--muted); }
-/* R2-M7 header compaction: max-width 840px (was 520) so Next Up fits on
-   one line at 1280px and the progress block stops driving header height. */
 .progress-block { min-width: 320px; max-width: 840px; flex: 1; }
 .progress-big { font-size: 22px; font-weight: 800; color: var(--cream); }
 .progress-big .progress-label { font-size: 14px; font-weight: 400; color: var(--muted); margin-left: 6px; }
@@ -84,33 +78,19 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
   background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
   padding: 8px 14px; margin-bottom: 6px;
 }
-/* R2-M7: toolbar labels sit BESIDE their controls (row direction), not
-   above them — the stacked label is what made every toolbar row ~55px
-   tall. Search keeps its own full-width row; chips + flags share row 2;
-   Grade/Status/checkboxes/export/import share row 3. */
 .tool { display: flex; flex-direction: row; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); min-width: 0; align-items: center; }
 .tool input[type="search"], .tool select {
   font: inherit; font-size: 14px; color: var(--cream); background: var(--ink);
   border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; min-width: 120px;
 }
-/* R2-M5 toolbar fix (1280x800): the search box (old min-width 230px) was
-   clipped at the right edge once the chip + flag rows widened the toolbar.
-   Search now takes its own full-width row (R2-M7: flex-basis 100%), and the
-   selects drop to 120px, so every control fits or wraps cleanly — nothing
-   overflows the toolbar and nothing is cut off. */
 .tool:has(> input[type="search"]) { flex: 1 1 100%; }
 .tool input[type="search"] { min-width: 160px; width: auto; flex: 1; }
-.tool.check { flex-direction: row; align-items: center; gap: 6px; padding-bottom: 4px; cursor: pointer; }
+.tool.check { gap: 6px; padding-bottom: 4px; cursor: pointer; }
 .tool.check input { width: 18px; height: 18px; accent-color: var(--pink); }
-/* Category chips (R2-M2): one row above the other toolbar controls, shared
-   with the flag toggles since R2-M7 (no flex-basis:100% — the flag row
-   flows onto the same row, so the toolbar loses a whole row).
-   Inactive chips read as dark pills; the active chip fills with sand (the
-   thesis accent) so the current filter is obvious at a glance. */
-.chip-row {
+.chip-row, .flag-row {
   display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
 }
-.chip-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-right: 2px; }
+.chip-label, .flag-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-right: 2px; }
 .chip {
   font: inherit; font-size: 13px; font-weight: 700; color: var(--cream);
   background: var(--ink); border: 1px solid var(--line); border-radius: 999px;
@@ -119,12 +99,6 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .chip:hover { border-color: var(--teal); }
 .chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 .chip.active { background: var(--sand); border-color: var(--sand); color: var(--ink); }
-/* Flag toggles (R2-M2b): deliberately NOT pills like the category chips —
-   rectangular, dashed outline when off, so Secret / Missable read as flags
-   rather than an eighth/ninth category. Active fills match the card badges:
-   silver for Secret (hidden), pink for Missable. */
-.flag-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.flag-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-right: 2px; }
 .flag-toggle {
   font: inherit; font-size: 12px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
   color: var(--muted); background: transparent; border: 1px dashed var(--line);
@@ -150,8 +124,6 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
   padding: 5px 12px; display: flex; gap: 12px; align-items: flex-start;
 }
 .card.earned { border-color: var(--green); background: #1E2A33; }
-/* Hidden-trophy row (R2-M3): dimmed, dashed border, deeper background — the
-   masking must be obvious at a glance in a screenshot, not just in text. */
 .card-hidden { opacity: .82; border-style: dashed; border-color: var(--muted); background: #1C1030; }
 .card input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--teal); flex: none; cursor: pointer; }
 .card-body { flex: 1; min-width: 0; }
@@ -164,10 +136,11 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
   font-size: 11px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
   border-radius: 4px; padding: 2px 7px; white-space: nowrap;
 }
-.badge-platinum { background: var(--cyan); color: var(--ink); }
-.badge-gold { background: var(--sand); color: var(--ink); }
-.badge-silver { background: var(--silver); color: var(--ink); }
-.badge-bronze { background: var(--bronze); color: var(--ink); }
+.badge-platinum, .badge-gold, .badge-silver, .badge-bronze { color: var(--ink); }
+.badge-platinum { background: var(--cyan); }
+.badge-gold { background: var(--sand); }
+.badge-silver { background: var(--silver); }
+.badge-bronze { background: var(--bronze); }
 .badge-kind { background: var(--panel2); color: var(--cream); border: 1px solid var(--line); }
 .badge-stage { background: transparent; color: var(--muted); border: 1px solid var(--line); }
 .badge-missable { background: var(--pink); color: #fff; }
@@ -179,9 +152,6 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
   background: none; border: none; color: var(--cyan); font: inherit; font-size: 13px;
   font-weight: 700; padding: 2px 0 0; cursor: pointer; text-align: left;
 }
-/* R2-M7: guide-detail + Sources block + disagree box compacted (margins and
-   padding trimmed, fonts untouched) so the Sources block and the disagree
-   box fit in the first 800px frame with the guide open. */
 .guide-detail { margin-top: 4px; border-top: 1px solid var(--line); padding-top: 4px; font-size: 14px; }
 .guide-detail ol { margin: 2px 0; padding-left: 22px; }
 .guide-detail li { margin-bottom: 2px; }
@@ -189,9 +159,6 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .guide-detail .tips { margin: 3px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
 .guide-detail .tips li { margin-bottom: 1px; }
 .guide-sources { margin: 6px 0 0; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
-/* Per-trophy notes (R2-M4): private note per trophy, saved to localStorage.
-   Sand left edge like the save-note box; textarea on the ink background so
-   typing reads clearly on the dark theme. */
 .guide-notes {
   margin: 5px 0 0; padding: 6px 12px; background: var(--panel2);
   display: flex; flex-wrap: wrap; align-items: center;
@@ -199,7 +166,7 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
 }
 .notes-label {
   display: block; font-size: 12px; font-weight: 800; letter-spacing: .4px;
-  text-transform: uppercase; color: var(--sand); margin-bottom: 0; flex: 1;
+  text-transform: uppercase; color: var(--sand); flex: 1;
 }
 .notes-input {
   display: block; width: 100%; font: inherit; font-size: 14px; color: var(--cream);
@@ -208,24 +175,19 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
 }
 .notes-input:focus { outline: 2px solid var(--sand); outline-offset: 1px; border-color: var(--sand); }
 .notes-input::placeholder { color: var(--muted); }
-.notes-row { display: flex; align-items: center; gap: 10px; margin-top: 0; order: 2; }
+.notes-row { display: flex; align-items: center; gap: 10px; order: 2; }
 .notes-save {
   font: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
   background: var(--sand); border: none; border-radius: 6px; padding: 4px 12px; cursor: pointer;
 }
 .notes-save:hover { filter: brightness(1.08); }
 .notes-status { font-size: 12.5px; color: var(--muted); }
-/* Per-trophy Sources block (R2-M1): Facts vs Method, named sources. Teal
-   left edge + deep teal panel so it reads as one block, distinct from the
-   pink Sources-disagree box and the plain Sources URL line below it. */
 .guide-srcblock {
   margin: 4px 0 0; padding: 4px 10px; background: #14303A;
   display: flex; flex-wrap: wrap; gap: 2px 14px;
   border: 1px solid var(--teal); border-left: 5px solid var(--teal); border-radius: 8px;
 }
 .guide-srcblock p { margin: 0; font-size: 13.5px; }
-.guide-srcblock p:first-child { margin-top: 0; }
-.guide-srcblock p:last-child { margin-bottom: 0; }
 .srcblock-facts b { color: var(--teal); }
 .srcblock-method b { color: var(--sand); }
 .srcblock-src { font-weight: 700; color: var(--cream); white-space: nowrap; }
@@ -258,8 +220,6 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .roadmap-stages .focus { margin: 0 0 6px; color: #E8DCF5; }
 .roadmap-stages .stage-trophies { font-size: 13px; color: var(--muted); margin: 0 0 6px; }
 .roadmap-stages .stage-trophies b { color: var(--cream); }
-/* Masked roadmap entry (R2-M3): same muted italic treatment as the
-   checklist's hidden name/desc, so masked entries read as hidden. */
 .roadmap-stages .stage-trophies .hidden-name { color: var(--muted); font-style: italic; }
 .roadmap-stages ul { margin: 6px 0 0; padding-left: 20px; font-size: 13.5px; }
 .warning {
@@ -272,8 +232,7 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
   border-radius: 6px; color: #C9FFF6; font-size: 13.5px;
 }
 
-/* Missables — R2-M7: row padding trimmed (10px → 6px) so the Hidden row
-   (trophy 48) fits in the first 800px frame; fonts untouched. */
+/* Missables */
 .missable-counts { font-size: 15px; font-weight: 700; color: var(--cream); margin: 2px 0 8px; }
 .missable-legend {
   display: flex; flex-direction: column; gap: 3px; background: var(--panel);
@@ -286,30 +245,22 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
   width: 100%; border-collapse: collapse; background: var(--panel);
   border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 14px;
 }
-.missable-table th, .missable-table td {
-  text-align: left; vertical-align: top; padding: 6px 12px;
-  border-bottom: 1px solid var(--line);
+.missable-table th, .missable-table td, .matrix-table th, .matrix-table td {
+  text-align: left; vertical-align: top; border-bottom: 1px solid var(--line);
 }
-.missable-table thead th {
+.missable-table th, .missable-table td { padding: 6px 12px; }
+.matrix-table th, .matrix-table td { padding: 10px 12px; }
+.missable-table thead th, .matrix-table thead th {
   background: var(--panel2); color: var(--sand); font-size: 12px;
   text-transform: uppercase; letter-spacing: .4px;
 }
 .missable-table tbody tr:last-child td { border-bottom: none; }
 .missable-table tr.row-missable td:first-child { border-left: 5px solid var(--pink); }
 .missable-table tr.row-watch td:first-child { border-left: 5px solid var(--sand); }
-/* Hidden row in the Missables table (R2-M3): dimmed; masked cells read as
-   hidden text rather than real mission/when content. */
 .missable-table tr.row-hidden { opacity: .82; }
 .missable-table td.hidden-cell { color: var(--muted); font-style: italic; }
 .missable-table td .missable-desc { margin-top: 2px; font-size: 13px; color: var(--muted); font-style: italic; }
 .missable-list { display: flex; flex-direction: column; gap: 8px; }
-.missable-card {
-  background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--pink);
-  border-radius: 10px; padding: 14px 16px;
-}
-.missable-card.watch { border-left-color: var(--sand); }
-.missable-card h3 { margin: 0 0 4px; font-size: 17px; }
-.missable-card p { margin: 4px 0; font-size: 14px; }
 .missable-safe { color: var(--muted); font-size: 13.5px; margin-top: 12px; }
 
 /* Sources */
@@ -326,25 +277,18 @@ main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .source-list .src-meta { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
 .source-list .src-covers { margin-top: 4px; color: #E8DCF5; font-size: 13.5px; }
 
-/* Source matrix (M4) */
+/* Source matrix */
 .matrix-table {
   width: 100%; border-collapse: collapse; background: var(--panel);
   border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 14px; margin-bottom: 14px;
 }
-.matrix-table th, .matrix-table td {
-  text-align: left; vertical-align: top; padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
-}
-.matrix-table thead th {
-  background: var(--panel2); color: var(--sand); font-size: 12px;
-  text-transform: uppercase; letter-spacing: .4px; white-space: nowrap;
-}
+.matrix-table thead th { white-space: nowrap; }
 .matrix-table tbody tr:last-child td { border-bottom: none; }
 .matrix-table td:not(:first-child) { white-space: nowrap; }
 .matrix-covers { margin-top: 3px; font-size: 13px; color: var(--muted); font-weight: 400; }
 .matrix-url { margin-top: 3px; font-size: 12px; color: var(--cyan); overflow-wrap: anywhere; font-weight: 400; }
 
-/* Worked example (M4) */
+/* Worked example */
 .worked-example {
   background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--teal);
   border-radius: 10px; padding: 14px 16px; margin-top: 14px;

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vice City Platinum Log — GTA VI Trophy Guide &amp; Tracker</title>
+<title>Vice City Platinum Log — GTA VI Trophy Guide</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -14,7 +14,7 @@
     <p class="tagline">55 trophy &middot; 1 platinum &middot; Vice City</p>
     <p class="subline">Every step cited &mdash; claims not yet checked in game are labelled as such.</p>
   </div>
-  <div class="progress-block" id="progress-block" aria-label="Progress">
+  <div class="progress-block" aria-label="Progress">
     <div class="progress-big"><span id="progress-count">0 / 55</span><span class="progress-label">earned</span></div>
     <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
     <div class="grade-bars" id="grade-bars"></div>
@@ -33,17 +33,9 @@
 <main>
   <section id="panel-checklist" class="panel active" role="tabpanel" aria-label="Checklist">
     <div class="toolbar">
-      <label class="tool">Search <input id="search" type="search" placeholder="Search trophy name or description&hellip;" autocomplete="off"></label>
+      <label class="tool">Search <input id="search" type="search" placeholder="Search trophy name or description&hellip;"></label>
       <div class="chip-row" id="chip-row" role="group" aria-label="Filter by category">
         <span class="chip-label">Category</span>
-        <button type="button" class="chip active" data-category="all" aria-pressed="true">All</button>
-        <button type="button" class="chip" data-category="Story" aria-pressed="false">Story</button>
-        <button type="button" class="chip" data-category="Strangers" aria-pressed="false">Strangers</button>
-        <button type="button" class="chip" data-category="Crime" aria-pressed="false">Crime</button>
-        <button type="button" class="chip" data-category="Activities" aria-pressed="false">Activities</button>
-        <button type="button" class="chip" data-category="Collectibles" aria-pressed="false">Collectibles</button>
-        <button type="button" class="chip" data-category="Money" aria-pressed="false">Money</button>
-        <button type="button" class="chip" data-category="Combat" aria-pressed="false">Combat</button>
       </div>
       <div class="flag-row" role="group" aria-label="Filter by flags">
         <span class="flag-label">Flags</span>
@@ -51,20 +43,10 @@
         <button type="button" class="flag-toggle flag-missable" id="flag-missable" aria-pressed="false">Missable</button>
       </div>
       <label class="tool">Grade
-        <select id="grade">
-          <option value="all">All grades</option>
-          <option value="platinum">Platinum</option>
-          <option value="gold">Gold</option>
-          <option value="silver">Silver</option>
-          <option value="bronze">Bronze</option>
-        </select>
+        <select id="grade"></select>
       </label>
       <label class="tool">Status
-        <select id="status">
-          <option value="all">All</option>
-          <option value="earned">Earned</option>
-          <option value="remaining">Remaining</option>
-        </select>
+        <select id="status"></select>
       </label>
       <label class="tool check"><input id="spoiler" type="checkbox" checked> Hide story spoilers</label>
       <label class="tool check"><input id="hide-earned" type="checkbox"> Hide earned</label>
