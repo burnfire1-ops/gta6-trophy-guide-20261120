@@ -12,7 +12,7 @@
   <div class="title-block">
     <h1>Vice City Platinum Log</h1>
     <p class="tagline">55 trophy &middot; 1 platinum &middot; Vice City</p>
-    <p class="subline">Semua langkah bersitasi &mdash; yang belum dicek di game, ditulis belum dicek.</p>
+    <p class="subline">Every step cited &mdash; claims not yet checked in game are labelled as such.</p>
   </div>
   <div class="progress-block" id="progress-block" aria-label="Progress">
     <div class="progress-big"><span id="progress-count">0 / 55</span><span class="progress-label">earned</span></div>
@@ -34,15 +34,22 @@
   <section id="panel-checklist" class="panel active" role="tabpanel" aria-label="Checklist">
     <div class="toolbar">
       <label class="tool">Search <input id="search" type="search" placeholder="Search trophy name or description&hellip;" autocomplete="off"></label>
-      <label class="tool">Kind
-        <select id="kind">
-          <option value="all">All kinds</option>
-          <option value="story">Story</option>
-          <option value="missable">Missable</option>
-          <option value="collectible">Collectibles</option>
-          <option value="activity">Activities</option>
-        </select>
-      </label>
+      <div class="chip-row" id="chip-row" role="group" aria-label="Filter by category">
+        <span class="chip-label">Category</span>
+        <button type="button" class="chip active" data-category="all" aria-pressed="true">All</button>
+        <button type="button" class="chip" data-category="Story" aria-pressed="false">Story</button>
+        <button type="button" class="chip" data-category="Strangers" aria-pressed="false">Strangers</button>
+        <button type="button" class="chip" data-category="Crime" aria-pressed="false">Crime</button>
+        <button type="button" class="chip" data-category="Activities" aria-pressed="false">Activities</button>
+        <button type="button" class="chip" data-category="Collectibles" aria-pressed="false">Collectibles</button>
+        <button type="button" class="chip" data-category="Money" aria-pressed="false">Money</button>
+        <button type="button" class="chip" data-category="Combat" aria-pressed="false">Combat</button>
+      </div>
+      <div class="flag-row" role="group" aria-label="Filter by flags">
+        <span class="flag-label">Flags</span>
+        <button type="button" class="flag-toggle flag-secret" id="flag-secret" aria-pressed="false">Secret</button>
+        <button type="button" class="flag-toggle flag-missable" id="flag-missable" aria-pressed="false">Missable</button>
+      </div>
       <label class="tool">Grade
         <select id="grade">
           <option value="all">All grades</option>
@@ -60,6 +67,7 @@
         </select>
       </label>
       <label class="tool check"><input id="spoiler" type="checkbox" checked> Hide story spoilers</label>
+      <label class="tool check"><input id="hide-earned" type="checkbox"> Hide earned</label>
       <button id="export" type="button">Export progress</button>
       <label class="tool import">Import progress <input id="import" type="file" accept="application/json,.json"></label>
     </div>

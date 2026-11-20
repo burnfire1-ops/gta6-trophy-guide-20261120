@@ -20,7 +20,8 @@ import { buildDossier } from './vendor/makefun-frontend.ts';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-// Pre-flight (M5, revisi ke-2 main.ts): fail the build with a clear message
+// Pre-flight (R2-M5, revisi ke-2 main.ts dalam recording R2 — category check
+// below; R2-M1 revisi ke-1 — cites check): fail the build with a clear message
 // before copying anything, so a bad data file or an over-cap screenshot can
 // never ship. Checks: trophies.json exists + parses + 55 trophies + every
 // guide non-empty; screenshots/ holds exactly 4 whole PNG/JPEG files, each
@@ -45,6 +46,35 @@ if (emptyGuides.length) {
   preflightFail(`trophies with an empty guide: ${emptyGuides.join(', ')}.`);
 }
 
+// Pre-flight cites (R2-M1, revisi ke-1 main.ts dalam recording R2): every
+// step must cite >=1 source, and every trophy must list >=1 source —
+// otherwise the per-trophy Sources block would render an empty Facts or
+// Method row. Failures name the offending trophy id(s).
+const noSourceTrophies = trophyData.trophies
+  .filter((t) => !Array.isArray(t.sources) || t.sources.length === 0)
+  .map((t) => t.id ?? t.name ?? '(unknown)');
+if (noSourceTrophies.length) {
+  preflightFail(`trophies with no sources: ${noSourceTrophies.join(', ')}.`);
+}
+const uncitedSteps = trophyData.trophies.flatMap((t) =>
+  (t.steps || []).map((s, i) => ({ trophy: t.id ?? t.name ?? '(unknown)', step: s.n ?? i + 1, cites: s.cites })),
+).filter((x) => !Array.isArray(x.cites) || x.cites.length === 0);
+if (uncitedSteps.length) {
+  preflightFail(`steps with no cites: ${uncitedSteps.map((x) => `trophy ${x.trophy} step ${x.step}`).join(', ')}.`);
+}
+
+// Pre-flight categories (R2-M5, revisi ke-2 main.ts dalam recording R2):
+// every trophy must carry a category in the allowed set — the checklist's
+// category chips filter on exactly these values, so an unknown category
+// would silently vanish from every filter. Failures name the trophy id(s).
+const ALLOWED_CATEGORIES = ['Story', 'Strangers', 'Crime', 'Activities', 'Collectibles', 'Money', 'Combat'];
+const badCategories = trophyData.trophies
+  .filter((t) => !ALLOWED_CATEGORIES.includes(t.category))
+  .map((t) => `${t.id ?? t.name ?? '(unknown)'} (category: ${JSON.stringify(t.category)})`);
+if (badCategories.length) {
+  preflightFail(`trophies with an invalid category (allowed: ${ALLOWED_CATEGORIES.join(', ')}): ${badCategories.join(', ')}.`);
+}
+
 const shotsDir = join(here, 'screenshots');
 if (!existsSync(shotsDir)) preflightFail('screenshots/ is missing — take the 4 screenshots first.');
 const shotFiles = readdirSync(shotsDir).filter((f) => /\.(png|jpe?g)$/i.test(f)).sort();
@@ -61,7 +91,7 @@ for (const f of shotFiles) {
 
 // Vice City Platinum Log: report the guide's trophy count at build time so a wrong data file is visible immediately.
 console.log(`Vice City Platinum Log: ${trophyData.trophies.length} trophies, ${trophyData.sources.length} sources.`);
-console.log(`Pre-flight OK: 55 trophies with guides, 4 screenshots ≤256 KiB (${shotFiles.join(', ')}).`);
+console.log(`Pre-flight OK: 55 trophies with guides, every step cited, every category valid, 4 screenshots ≤256 KiB (${shotFiles.join(', ')}).`);
 
 mkdirSync(out, { recursive: true });
 cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });

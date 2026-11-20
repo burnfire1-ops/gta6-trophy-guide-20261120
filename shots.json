@@ -21,7 +21,6 @@
     "file": "3-missables.png",
     "path": "/",
     "tab": "missables",
-    "scroll": 112,
     "viewport": {
       "width": 1280,
       "height": 800
@@ -31,7 +30,6 @@
     "file": "4-sources.png",
     "path": "/",
     "tab": "sources",
-    "scroll": 112,
     "viewport": {
       "width": 1280,
       "height": 800

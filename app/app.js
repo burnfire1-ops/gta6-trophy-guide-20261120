@@ -2,6 +2,7 @@
 // Progress lives in localStorage; nothing here reaches the network.
 const EARNED_KEY = 'vcpl-earned-v1';
 const SPOILER_KEY = 'vcpl-spoiler-v1';
+const NOTES_KEY = 'vcpl-notes-v1';
 
 const GRADE_ORDER = ['platinum', 'gold', 'silver', 'bronze'];
 const STAGE_ORDER = ['prologue', 'chapter 1', 'chapter 2', 'chapter 3', 'chapter 4', 'final', 'cleanup'];
@@ -24,15 +25,36 @@ let earned = new Set();
 try {
   earned = new Set((JSON.parse(localStorage.getItem(EARNED_KEY) ?? '[]') || []).filter((id) => byId.has(id)));
 } catch { earned = new Set(); }
+// Per-trophy notes (R2-M4): {trophyId: "text"}, loaded the same tolerant way
+// as earned — corrupt data, unknown ids and non-string values are dropped.
+let notes = {};
+try {
+  const parsed = JSON.parse(localStorage.getItem(NOTES_KEY) ?? '{}') || {};
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    for (const [k, v] of Object.entries(parsed)) {
+      const id = Number(k);
+      if (byId.has(id) && typeof v === 'string' && v.trim()) notes[id] = v.trim();
+    }
+  }
+} catch { notes = {}; }
 let spoilerOn = localStorage.getItem(SPOILER_KEY) !== 'false';
 
 const $ = (id) => document.getElementById(id);
 const listEl = $('list');
 const searchEl = $('search');
-const kindEl = $('kind');
 const gradeEl = $('grade');
 const statusEl = $('status');
 const spoilerEl = $('spoiler');
+const hideEarnedEl = $('hide-earned');
+
+// Category chips (R2-M2b): single-select, one active chip at a time.
+// 'all' resets the category filter. Matches t.category in trophies.json.
+// Secret / Missable are NOT categories — they are independent flag toggles
+// (R2-M2b): Secret filters t.hidden, Missable filters missable_status.
+// Flags compose with the category chip, search, grade, status and hide-earned.
+let activeCategory = 'all';
+let secretOnly = false;
+let missableOnly = false;
 
 spoilerEl.checked = spoilerOn;
 
@@ -40,8 +62,25 @@ function save() {
   localStorage.setItem(EARNED_KEY, JSON.stringify([...earned].sort((a, b) => a - b)));
 }
 
+function saveNotes() {
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+
 function hiddenNow(t) {
   return t.hidden && spoilerOn && !earned.has(t.id);
+}
+
+// R2-M3: data prose (roadmap warning/notes, source coverage blurbs) can name
+// a trophy outright — e.g. the stage 7 warning names hidden id 48, and
+// source 5's covers blurb names hidden id 47. Mask any still-hidden trophy
+// name inside such text while spoilers are on; the data files are untouched.
+function maskHiddenText(str) {
+  if (!spoilerOn) return str;
+  let out = str;
+  for (const t of trophies) {
+    if (t.hidden && !earned.has(t.id)) out = out.split(t.name).join('Hidden trophy');
+  }
+  return out;
 }
 
 function barHtml(label, got, total, cls) {
@@ -79,7 +118,11 @@ function renderProgress() {
     const name = document.createElement('b');
     name.textContent = hiddenNow(next) ? 'Hidden trophy' : next.name;
     const meta = document.createElement('span');
-    meta.textContent = ` — ${STAGE_LABEL[next.stage] || next.stage} · ${next.grade} · ${hiddenNow(next) ? 'earn to reveal' : next.description}`;
+    // R2-M3: when the next trophy is hidden, the meta must not leak its
+    // stage, grade or description either — only "earn to reveal".
+    meta.textContent = hiddenNow(next)
+      ? ' — earn to reveal'
+      : ` — ${STAGE_LABEL[next.stage] || next.stage} · ${next.grade} · ${next.description}`;
     nextEl.append(name, meta);
   }
 }
@@ -97,14 +140,13 @@ function nextUpTrophy() {
 function matchesFilters(t) {
   const q = searchEl.value.trim().toLowerCase();
   if (q && !`${t.name} ${t.description}`.toLowerCase().includes(q)) return false;
+  if (activeCategory !== 'all' && t.category !== activeCategory) return false;
+  if (secretOnly && !t.hidden) return false;
+  if (missableOnly && t.missable_status === 'not-missable') return false;
+  if (hideEarnedEl.checked && earned.has(t.id)) return false;
   if (gradeEl.value !== 'all' && t.grade !== gradeEl.value) return false;
   if (statusEl.value === 'earned' && !earned.has(t.id)) return false;
   if (statusEl.value === 'remaining' && earned.has(t.id)) return false;
-  if (kindEl.value === 'missable') {
-    if (t.missable_status === 'not-missable') return false;
-  } else if (kindEl.value !== 'all' && t.kind !== kindEl.value) {
-    return false;
-  }
   return true;
 }
 
@@ -127,6 +169,40 @@ function buildGuideDetail(t) {
   g.className = 'card-guide';
   g.textContent = t.guide;
   d.append(g);
+  // Sources block (R2-M1, moved first in R2-M7): per-trophy Facts vs
+  // Method, named sources — sources first as transparency, then the
+  // steps they back. Facts = official-list sources in t.sources ([1]
+  // Exophase, [2] PSNProfiles): the sources that fix the official
+  // name/description/grade/counts. Method = union of every cite across
+  // t.steps: the sources that back the how-to. A source may honestly
+  // appear on both rows. Method falls back to all of t.sources if the
+  // steps carried no cites at all.
+  const OFFICIAL_LIST_IDS = [1, 2];
+  const factsIds = (t.sources || []).filter((id) => OFFICIAL_LIST_IDS.includes(id));
+  let methodIds = [...new Set((t.steps || []).flatMap((s) => s.cites || []))].sort((a, b) => a - b);
+  if (!methodIds.length) methodIds = [...(t.sources || [])].sort((a, b) => a - b);
+  const shortName = (id) => sourceName(id).split(' — ')[0];
+  const srcBlock = document.createElement('div');
+  srcBlock.className = 'guide-srcblock';
+  const srcRow = (label, cls, ids) => {
+    const p = document.createElement('p');
+    p.className = `srcblock-row ${cls}`;
+    const b = document.createElement('b');
+    b.textContent = `${label}: `;
+    p.append(b);
+    ids.forEach((id, i) => {
+      const s = document.createElement('span');
+      s.className = 'srcblock-src';
+      s.textContent = `[${id}] ${shortName(id)}`;
+      s.title = sourceName(id);
+      p.append(s);
+      if (i < ids.length - 1) p.append(document.createTextNode(' · '));
+    });
+    return p;
+  };
+  if (factsIds.length) srcBlock.append(srcRow('Facts', 'srcblock-facts', factsIds));
+  if (methodIds.length) srcBlock.append(srcRow('Method', 'srcblock-method', methodIds));
+  d.append(srcBlock);
   if (t.steps && t.steps.length) {
     const ol = document.createElement('ol');
     for (const st of t.steps) {
@@ -187,6 +263,43 @@ function buildGuideDetail(t) {
     box.append(note);
     d.append(box);
   }
+  // Per-trophy notes (R2-M4): a private note per trophy, stored in
+  // localStorage under NOTES_KEY. Explicit Save button — no autosave, so a
+  // half-typed note never overwrites a saved one. Clearing the box and
+  // saving deletes the note. The textarea is prefilled with the saved note,
+  // so the note is visible whenever the pane opens.
+  const notesBox = document.createElement('div');
+  notesBox.className = 'guide-notes';
+  const notesLabel = document.createElement('label');
+  notesLabel.className = 'notes-label';
+  notesLabel.textContent = 'My notes';
+  const notesArea = document.createElement('textarea');
+  notesArea.className = 'notes-input';
+  notesArea.rows = 3;
+  notesArea.placeholder = 'Your own note for this trophy — strategy, loadout, where you got stuck…';
+  notesArea.value = notes[t.id] || '';
+  notesArea.setAttribute('aria-label', `My notes for ${t.name}`);
+  const notesRow = document.createElement('div');
+  notesRow.className = 'notes-row';
+  const notesSave = document.createElement('button');
+  notesSave.type = 'button';
+  notesSave.className = 'notes-save';
+  notesSave.textContent = 'Save note';
+  const notesStatus = document.createElement('span');
+  notesStatus.className = 'notes-status';
+  notesStatus.textContent = notes[t.id] ? 'Note saved' : '';
+  notesSave.addEventListener('click', () => {
+    const val = notesArea.value.trim();
+    if (val) notes[t.id] = val;
+    else delete notes[t.id];
+    saveNotes();
+    notesStatus.textContent = val ? 'Note saved' : 'Note deleted';
+  });
+  notesRow.append(notesSave, notesStatus);
+  notesBox.append(notesLabel, notesArea, notesRow);
+  d.append(notesBox);
+  // Sources URL line (R2-M7: last in the pane, after the notes — the
+  // Facts/Method block above already names the sources up front).
   const srcs = document.createElement('p');
   srcs.className = 'guide-sources';
   // URLs as plain text, never <a href>: the app stays offline and the
@@ -212,13 +325,16 @@ function renderList() {
   }
   for (const t of shown) {
     const card = document.createElement('article');
-    card.className = 'card' + (earned.has(t.id) ? ' earned' : '');
+    // R2-M3: a still-hidden trophy gets a visibly distinct row so the
+    // masking reads at a glance in a screenshot.
+    card.className = 'card' + (earned.has(t.id) ? ' earned' : '') + (hiddenNow(t) ? ' card-hidden' : '');
     card.dataset.trophyId = t.id;
 
     const box = document.createElement('input');
     box.type = 'checkbox';
     box.checked = earned.has(t.id);
-    box.setAttribute('aria-label', `Mark ${t.name} as earned`);
+    // R2-M3: the aria-label must not leak the real name while hidden.
+    box.setAttribute('aria-label', `Mark ${hiddenNow(t) ? 'Hidden trophy' : t.name} as earned`);
     box.addEventListener('change', () => {
       if (box.checked) earned.add(t.id);
       else earned.delete(t.id);
@@ -236,13 +352,22 @@ function renderList() {
     name.className = 'card-name' + (hiddenNow(t) ? ' hidden-name' : '');
     name.textContent = hiddenNow(t) ? 'Hidden trophy' : t.name;
     head.append(name);
-    head.append(badge(t.grade, `badge-${t.grade}`));
-    head.append(badge(KIND_LABEL[t.kind] || t.kind, 'badge-kind'));
-    head.append(badge(STAGE_LABEL[t.stage] || t.stage, 'badge-stage'));
-    if (t.missable_status === 'missable') head.append(badge('Missable', 'badge-missable'));
-    else if (t.missable_status === 'watch') head.append(badge('Watch', 'badge-watch'));
-    if (t.confirm_status === 'unconfirmed') head.append(badge('Belum dicek', 'badge-unconfirmed'));
-    if (t.hidden) head.append(badge('Hidden', 'badge-hidden'));
+    // R2-M3: while hidden, NO real badge may show — grade, kind and stage
+    // all leak the trophy, and Missable / Watch / Belum dicek leak its
+    // nature. Only the neutral "Hidden" badge is shown. The real badges
+    // (plus "Hidden", marking it a secret trophy) return once earned or
+    // once spoilers are switched off.
+    if (hiddenNow(t)) {
+      head.append(badge('Hidden', 'badge-hidden'));
+    } else {
+      head.append(badge(t.grade, `badge-${t.grade}`));
+      head.append(badge(KIND_LABEL[t.kind] || t.kind, 'badge-kind'));
+      head.append(badge(STAGE_LABEL[t.stage] || t.stage, 'badge-stage'));
+      if (t.missable_status === 'missable') head.append(badge('Missable', 'badge-missable'));
+      else if (t.missable_status === 'watch') head.append(badge('Watch', 'badge-watch'));
+      if (t.confirm_status === 'unconfirmed') head.append(badge('Belum dicek', 'badge-unconfirmed'));
+      if (t.hidden) head.append(badge('Hidden', 'badge-hidden'));
+    }
     body.append(head);
 
     const desc = document.createElement('p');
@@ -291,7 +416,7 @@ function renderRoadmap() {
   const ul = document.createElement('ul');
   for (const r of s.rules) {
     const li = document.createElement('li');
-    li.textContent = r;
+    li.textContent = maskHiddenText(r);
     ul.append(li);
   }
   $('roadmap-summary').append(h, meta, time, diff, ul);
@@ -309,14 +434,29 @@ function renderRoadmap() {
     h3.append(n, document.createTextNode(st.title));
     const focus = document.createElement('p');
     focus.className = 'focus';
-    focus.textContent = st.focus;
+    focus.textContent = maskHiddenText(st.focus);
     const tr = document.createElement('p');
     tr.className = 'stage-trophies';
     const earnedIn = st.trophies.filter((id) => earned.has(id)).length;
     tr.innerHTML = '';
     const b = document.createElement('b');
     b.textContent = `${earnedIn}/${st.trophies.length} earned: `;
-    tr.append(b, document.createTextNode(st.trophies.map((id) => byId.get(id)?.name ?? id).join(', ')));
+    tr.append(b);
+    // R2-M3: mask hidden, unearned trophy names here too — the count above
+    // stays exact (numbers, not names). Masked entries get the italic
+    // .hidden-name style so they read as hidden in a screenshot.
+    st.trophies.forEach((id, i) => {
+      const t = byId.get(id);
+      if (i) tr.append(document.createTextNode(', '));
+      if (t && hiddenNow(t)) {
+        const s = document.createElement('span');
+        s.className = 'hidden-name';
+        s.textContent = 'Hidden trophy';
+        tr.append(s);
+      } else {
+        tr.append(document.createTextNode(t?.name ?? id));
+      }
+    });
     li.append(h3, focus, tr);
     if (saveRule && st.title.startsWith('Chapter')) {
       const save = document.createElement('p');
@@ -328,7 +468,7 @@ function renderRoadmap() {
       const notes = document.createElement('ul');
       for (const note of st.notes) {
         const nli = document.createElement('li');
-        nli.textContent = note;
+        nli.textContent = maskHiddenText(note);
         notes.append(nli);
       }
       li.append(notes);
@@ -336,7 +476,7 @@ function renderRoadmap() {
     if (st.warning) {
       const w = document.createElement('p');
       w.className = 'warning';
-      w.textContent = st.warning;
+      w.textContent = maskHiddenText(st.warning);
       li.append(w);
     }
     stagesEl.append(li);
@@ -425,13 +565,21 @@ function renderMissables() {
   const tbody = document.createElement('tbody');
   for (const t of flagged) {
     const d = MISSABLE_DETAIL[t.id] || { mission: '—', when: t.guide };
+    // R2-M3: the one hidden flagged trophy (id 48, watch) must not leak
+    // through this tab either — its chapter leaks the stage, its mission /
+    // "when" text leaks what it asks for, and its tier badge leaks the
+    // flag. While hidden, every cell shows only the neutral mask; the row
+    // itself stays, so the counts above stay exact. Once earned (or with
+    // spoilers off) the full warning returns.
+    const hid = hiddenNow(t);
     const row = document.createElement('tr');
-    row.className = t.missable_status === 'missable' ? 'row-missable' : 'row-watch';
+    row.className = (t.missable_status === 'missable' ? 'row-missable' : 'row-watch') + (hid ? ' row-hidden' : '');
 
     const chapter = document.createElement('td');
-    chapter.textContent = t.stage === 'cleanup' ? 'Cleanup (free-roam)' : (STAGE_LABEL[t.stage] || t.stage);
+    chapter.textContent = hid ? '—' : (t.stage === 'cleanup' ? 'Cleanup (free-roam)' : (STAGE_LABEL[t.stage] || t.stage));
     const mission = document.createElement('td');
-    mission.textContent = d.mission;
+    if (hid) mission.className = 'hidden-cell';
+    mission.textContent = hid ? 'Hidden trophy — earn to reveal' : d.mission;
     const trophy = document.createElement('td');
     const tName = document.createElement('b');
     tName.textContent = hiddenNow(t) ? 'Hidden trophy' : t.name;
@@ -440,24 +588,34 @@ function renderMissables() {
     tDesc.textContent = hiddenNow(t) ? 'Hidden trophy — earn to reveal' : t.description;
     trophy.append(tName, tDesc);
     const when = document.createElement('td');
-    when.textContent = d.when + ' ';
-    for (const c of t.sources || []) {
-      const cite = document.createElement('span');
-      cite.className = 'cite';
-      cite.textContent = `[${c}]`;
-      cite.title = sourceName(c);
-      when.append(cite, document.createTextNode(' '));
-    }
-    if (t.confirm_status === 'unconfirmed') {
-      const flag = document.createElement('div');
-      flag.className = 'guide-flag';
-      flag.textContent = 'Belum dicek — not yet confirmed in the game.';
-      when.append(flag);
+    if (hid) {
+      when.className = 'hidden-cell';
+      when.textContent = 'Hidden trophy — earn to reveal';
+    } else {
+      when.textContent = d.when + ' ';
+      for (const c of t.sources || []) {
+        const cite = document.createElement('span');
+        cite.className = 'cite';
+        cite.textContent = `[${c}]`;
+        cite.title = sourceName(c);
+        when.append(cite, document.createTextNode(' '));
+      }
+      if (t.confirm_status === 'unconfirmed') {
+        const flag = document.createElement('div');
+        flag.className = 'guide-flag';
+        flag.textContent = 'Belum dicek — not yet confirmed in the game.';
+        when.append(flag);
+      }
     }
     const tier = document.createElement('td');
     const tierBadge = document.createElement('span');
-    tierBadge.className = `badge ${t.missable_status === 'missable' ? 'badge-missable' : 'badge-watch'}`;
-    tierBadge.textContent = t.missable_status === 'missable' ? 'MISSABLE' : 'WATCH';
+    if (hid) {
+      tierBadge.className = 'badge badge-hidden';
+      tierBadge.textContent = 'Hidden';
+    } else {
+      tierBadge.className = `badge ${t.missable_status === 'missable' ? 'badge-missable' : 'badge-watch'}`;
+      tierBadge.textContent = t.missable_status === 'missable' ? 'MISSABLE' : 'WATCH';
+    }
     tier.append(tierBadge);
     row.append(chapter, mission, trophy, when, tier);
     tbody.append(row);
@@ -521,7 +679,9 @@ function renderSources() {
     b.textContent = `[${src.id}] ${src.name}`;
     const covers = document.createElement('div');
     covers.className = 'matrix-covers';
-    covers.textContent = src.covers;
+    // R2-M3: source 5's covers blurb names hidden id 47 ("Personal Best") —
+    // mask it while spoilers are on. Worked example untouched (trophy 1).
+    covers.textContent = maskHiddenText(src.covers);
     const url = document.createElement('div');
     url.className = 'matrix-url';
     url.textContent = src.url;
@@ -553,7 +713,7 @@ function renderSources() {
     meta.textContent = `Read ${src.read_date} · cited by ${usedBy} of ${trophies.length} trophy guides`;
     const covers = document.createElement('div');
     covers.className = 'src-covers';
-    covers.textContent = src.covers;
+    covers.textContent = maskHiddenText(src.covers);
     li.append(name, meta, covers);
     list.append(li);
   }
@@ -590,21 +750,52 @@ for (const btn of document.querySelectorAll('.tabs button')) {
 
 // Toolbar
 searchEl.addEventListener('input', renderList);
-kindEl.addEventListener('change', renderList);
+for (const chip of document.querySelectorAll('#chip-row .chip')) {
+  chip.addEventListener('click', () => {
+    activeCategory = chip.dataset.category;
+    for (const c of document.querySelectorAll('#chip-row .chip')) {
+      const on = c === chip;
+      c.classList.toggle('active', on);
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    renderList();
+  });
+}
+hideEarnedEl.addEventListener('change', renderList);
+for (const [btnId, get, set] of [
+  ['flag-secret', () => secretOnly, (v) => { secretOnly = v; }],
+  ['flag-missable', () => missableOnly, (v) => { missableOnly = v; }],
+]) {
+  const btn = document.getElementById(btnId);
+  btn.addEventListener('click', () => {
+    set(!get());
+    btn.classList.toggle('active', get());
+    btn.setAttribute('aria-pressed', get() ? 'true' : 'false');
+    renderList();
+  });
+}
 gradeEl.addEventListener('change', renderList);
 statusEl.addEventListener('change', renderList);
 spoilerEl.addEventListener('change', () => {
   spoilerOn = spoilerEl.checked;
   localStorage.setItem(SPOILER_KEY, String(spoilerOn));
+  // R2-M3: spoiler state feeds Next Up, Roadmap, Missables and the Sources
+  // covers blurbs too, not just the checklist — re-render all of them so
+  // no stale masked (or unmasked) text survives a toggle.
+  renderProgress();
   renderList();
+  renderRoadmap();
+  renderMissables();
+  renderSources();
 });
 
-// Export: download the earned trophy ids as JSON.
+// Export: download the earned trophy ids + per-trophy notes as JSON.
 $('export').addEventListener('click', () => {
   const payload = {
     app: 'Vice City Platinum Log',
     exported_at: new Date().toISOString(),
     earned: [...earned].sort((a, b) => a - b),
+    notes,
   };
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
@@ -613,7 +804,9 @@ $('export').addEventListener('click', () => {
   URL.revokeObjectURL(a.href);
 });
 
-// Import: accept {earned:[ids]} or a bare array of ids (or names, for old exports).
+// Import: accept {earned:[ids], notes:{id:"text"}} or a bare array of ids
+// (or names, for old exports). An export without notes leaves the current
+// notes untouched — old exports stay importable (backward compatible).
 $('import').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -628,8 +821,21 @@ $('import').addEventListener('change', async (e) => {
     }
     earned = next;
     save();
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)
+      && raw.notes && typeof raw.notes === 'object' && !Array.isArray(raw.notes)) {
+      const nextNotes = {};
+      for (const [k, v] of Object.entries(raw.notes)) {
+        const id = Number(k);
+        if (byId.has(id) && typeof v === 'string' && v.trim()) nextNotes[id] = v.trim();
+      }
+      notes = nextNotes;
+      saveNotes();
+    }
     renderProgress();
     renderList();
+    // The Sources tab's worked example is also a buildGuideDetail pane —
+    // re-render it so an imported note shows there too.
+    renderSources();
   } catch (err) {
     alert(`Import failed: ${err.message}`);
   }
