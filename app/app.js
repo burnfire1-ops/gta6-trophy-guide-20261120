@@ -275,7 +275,7 @@ function buildGuideDetail(t) {
   notesLabel.textContent = 'My notes';
   const notesArea = document.createElement('textarea');
   notesArea.className = 'notes-input';
-  notesArea.rows = 3;
+  notesArea.rows = 2;
   notesArea.placeholder = 'Your own note for this trophy — strategy, loadout, where you got stuck…';
   notesArea.value = notes[t.id] || '';
   notesArea.setAttribute('aria-label', `My notes for ${t.name}`);

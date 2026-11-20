@@ -33,7 +33,7 @@ a { color: var(--cyan); }
   flex-wrap: wrap;
   gap: 24px;
   justify-content: space-between;
-  padding: 14px 24px 12px;
+  padding: 8px 24px 6px;
   background: linear-gradient(135deg, #2A1050 0%, #1A0B2E 55%, #3A1408 100%);
   border-bottom: 3px solid var(--orange);
 }
@@ -47,19 +47,19 @@ a { color: var(--cyan); }
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
 }
-.tagline { margin: 4px 0 0; font-size: 16px; font-weight: 700; color: var(--sand); }
-.subline { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.tagline { margin: 1px 0 0; font-size: 16px; font-weight: 700; color: var(--sand); }
+.subline { margin: 1px 0 0; font-size: 13px; color: var(--muted); }
 /* R2-M7 header compaction: max-width 840px (was 520) so Next Up fits on
    one line at 1280px and the progress block stops driving header height. */
 .progress-block { min-width: 320px; max-width: 840px; flex: 1; }
 .progress-big { font-size: 22px; font-weight: 800; color: var(--cream); }
 .progress-big .progress-label { font-size: 14px; font-weight: 400; color: var(--muted); margin-left: 6px; }
-.progress-bar { height: 10px; background: var(--ink); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin: 4px 0 6px; }
+.progress-bar { height: 10px; background: var(--ink); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin: 2px 0 3px; }
 .progress-fill { height: 100%; background: var(--teal); transition: width .2s; }
 .grade-bars, .stage-bars { display: flex; flex-wrap: wrap; gap: 2px 6px; font-size: 11px; color: var(--muted); }
 .grade-bars b, .stage-bars b { color: var(--cream); font-weight: 600; }
 .mini-bar { display: inline-block; width: 28px; height: 6px; background: var(--ink); border-radius: 3px; overflow: hidden; vertical-align: middle; margin: 0 2px; }
-.next-up { margin: 6px 0 0; font-size: 13px; color: #E8DCF5; border-top: 1px solid var(--line); padding-top: 6px; }
+.next-up { margin: 3px 0 0; font-size: 13px; color: #E8DCF5; border-top: 1px solid var(--line); padding-top: 3px; }
 .next-up .next-label { color: var(--sand); font-weight: 800; text-transform: uppercase; font-size: 11.5px; letter-spacing: .5px; }
 .mini-bar i { display: block; height: 100%; background: var(--teal); }
 .dot-platinum { color: var(--cyan); } .dot-gold { color: var(--sand); }
@@ -69,20 +69,20 @@ a { color: var(--cyan); }
 .tabs { display: flex; gap: 4px; padding: 0 24px; background: var(--ink); border-bottom: 1px solid var(--line); }
 .tabs button {
   background: none; border: none; color: var(--muted); font: inherit; font-weight: 700;
-  padding: 8px 18px; cursor: pointer; border-bottom: 3px solid transparent;
+  padding: 4px 18px; cursor: pointer; border-bottom: 3px solid transparent;
 }
 .tabs button:hover { color: var(--cream); }
 .tabs button.active { color: var(--cream); border-bottom-color: var(--orange); }
 
-main { padding: 8px 24px 24px; max-width: 1240px; margin: 0 auto; }
+main { padding: 6px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .panel[hidden] { display: none; }
 .panel-intro { color: var(--muted); max-width: 760px; margin: 8px 0 10px; }
 
 /* Toolbar */
 .toolbar {
-  display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end;
+  display: flex; flex-wrap: wrap; gap: 3px 12px; align-items: end;
   background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-  padding: 10px 14px; margin-bottom: 12px;
+  padding: 8px 14px; margin-bottom: 6px;
 }
 /* R2-M7: toolbar labels sit BESIDE their controls (row direction), not
    above them — the stacked label is what made every toolbar row ~55px
@@ -91,7 +91,7 @@ main { padding: 8px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .tool { display: flex; flex-direction: row; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); min-width: 0; align-items: center; }
 .tool input[type="search"], .tool select {
   font: inherit; font-size: 14px; color: var(--cream); background: var(--ink);
-  border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; min-width: 120px;
+  border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; min-width: 120px;
 }
 /* R2-M5 toolbar fix (1280x800): the search box (old min-width 230px) was
    clipped at the right edge once the chip + flag rows widened the toolbar.
@@ -100,7 +100,7 @@ main { padding: 8px 24px 24px; max-width: 1240px; margin: 0 auto; }
    overflows the toolbar and nothing is cut off. */
 .tool:has(> input[type="search"]) { flex: 1 1 100%; }
 .tool input[type="search"] { min-width: 160px; width: auto; flex: 1; }
-.tool.check { flex-direction: row; align-items: center; gap: 6px; padding-bottom: 8px; cursor: pointer; }
+.tool.check { flex-direction: row; align-items: center; gap: 6px; padding-bottom: 4px; cursor: pointer; }
 .tool.check input { width: 18px; height: 18px; accent-color: var(--pink); }
 /* Category chips (R2-M2): one row above the other toolbar controls, shared
    with the flag toggles since R2-M7 (no flex-basis:100% — the flag row
@@ -114,7 +114,7 @@ main { padding: 8px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .chip {
   font: inherit; font-size: 13px; font-weight: 700; color: var(--cream);
   background: var(--ink); border: 1px solid var(--line); border-radius: 999px;
-  padding: 4px 12px; cursor: pointer; white-space: nowrap;
+  padding: 3px 12px; cursor: pointer; white-space: nowrap;
 }
 .chip:hover { border-color: var(--teal); }
 .chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
@@ -128,7 +128,7 @@ main { padding: 8px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .flag-toggle {
   font: inherit; font-size: 12px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
   color: var(--muted); background: transparent; border: 1px dashed var(--line);
-  border-radius: 6px; padding: 5px 11px; cursor: pointer; white-space: nowrap;
+  border-radius: 6px; padding: 4px 11px; cursor: pointer; white-space: nowrap;
 }
 .flag-toggle:hover { border-color: var(--teal); color: var(--cream); }
 .flag-toggle:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
@@ -136,18 +136,18 @@ main { padding: 8px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .flag-toggle.active.flag-missable { background: var(--pink); border: 1px solid var(--pink); color: #fff; }
 #export, .import {
   font: inherit; font-size: 14px; font-weight: 700; color: var(--ink);
-  background: var(--sand); border: none; border-radius: 6px; padding: 7px 14px; cursor: pointer;
+  background: var(--sand); border: none; border-radius: 6px; padding: 6px 14px; cursor: pointer;
 }
 .import { background: var(--teal); }
 .import input { display: none; }
 #export:hover, .import:hover { filter: brightness(1.08); }
-.list-count { color: var(--muted); font-size: 13px; margin: 0 2px 6px; }
+.list-count { color: var(--muted); font-size: 13px; margin: 0 2px 4px; }
 
 /* Trophy cards */
 .trophy-list { display: flex; flex-direction: column; gap: 8px; }
 .card {
   background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-  padding: 8px 12px; display: flex; gap: 12px; align-items: flex-start;
+  padding: 5px 12px; display: flex; gap: 12px; align-items: flex-start;
 }
 .card.earned { border-color: var(--green); background: #1E2A33; }
 /* Hidden-trophy row (R2-M3): dimmed, dashed border, deeper background — the
@@ -158,7 +158,7 @@ main { padding: 8px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .card-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
 .card-name { font-size: 16px; font-weight: 700; margin: 0; }
 .card-name.hidden-name { color: var(--muted); font-style: italic; font-weight: 600; }
-.card-desc { margin: 2px 0 0; font-size: 13.5px; color: #E8DCF5; }
+.card-desc { margin: 1px 0 0; font-size: 13.5px; color: #E8DCF5; }
 .card-desc.hidden-desc { color: var(--muted); font-style: italic; }
 .badge {
   font-size: 11px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
@@ -174,43 +174,44 @@ main { padding: 8px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .badge-watch { background: transparent; color: var(--pink); border: 1px solid var(--pink); }
 .badge-unconfirmed { background: transparent; color: var(--sand); border: 1px solid var(--sand); }
 .badge-hidden { background: transparent; color: var(--muted); border: 1px solid var(--line); }
-.card-guide { margin: 6px 0 0; font-size: 14px; color: var(--cream); }
+.card-guide { margin: 4px 0 0; font-size: 14px; color: var(--cream); }
 .card-toggle {
   background: none; border: none; color: var(--cyan); font: inherit; font-size: 13px;
-  font-weight: 700; padding: 4px 0 0; cursor: pointer; text-align: left;
+  font-weight: 700; padding: 2px 0 0; cursor: pointer; text-align: left;
 }
 /* R2-M7: guide-detail + Sources block + disagree box compacted (margins and
    padding trimmed, fonts untouched) so the Sources block and the disagree
    box fit in the first 800px frame with the guide open. */
-.guide-detail { margin-top: 6px; border-top: 1px solid var(--line); padding-top: 6px; font-size: 14px; }
-.guide-detail ol { margin: 3px 0; padding-left: 22px; }
-.guide-detail li { margin-bottom: 3px; }
+.guide-detail { margin-top: 4px; border-top: 1px solid var(--line); padding-top: 4px; font-size: 14px; }
+.guide-detail ol { margin: 2px 0; padding-left: 22px; }
+.guide-detail li { margin-bottom: 2px; }
 .cite { font-size: 12px; color: var(--cyan); font-weight: 700; white-space: nowrap; }
-.guide-detail .tips { margin: 4px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
-.guide-detail .tips li { margin-bottom: 2px; }
+.guide-detail .tips { margin: 3px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+.guide-detail .tips li { margin-bottom: 1px; }
 .guide-sources { margin: 6px 0 0; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
 /* Per-trophy notes (R2-M4): private note per trophy, saved to localStorage.
    Sand left edge like the save-note box; textarea on the ink background so
    typing reads clearly on the dark theme. */
 .guide-notes {
-  margin: 10px 0 0; padding: 8px 12px; background: var(--panel2);
+  margin: 5px 0 0; padding: 6px 12px; background: var(--panel2);
+  display: flex; flex-wrap: wrap; align-items: center;
   border: 1px solid var(--line); border-left: 5px solid var(--sand); border-radius: 8px;
 }
 .notes-label {
   display: block; font-size: 12px; font-weight: 800; letter-spacing: .4px;
-  text-transform: uppercase; color: var(--sand); margin-bottom: 6px;
+  text-transform: uppercase; color: var(--sand); margin-bottom: 0; flex: 1;
 }
 .notes-input {
   display: block; width: 100%; font: inherit; font-size: 14px; color: var(--cream);
   background: var(--ink); border: 1px solid var(--line); border-radius: 6px;
-  padding: 8px 10px; resize: vertical; min-height: 64px;
+  padding: 6px 10px; resize: vertical; min-height: 0; flex: 1 1 100%; order: 3; margin-top: 6px;
 }
 .notes-input:focus { outline: 2px solid var(--sand); outline-offset: 1px; border-color: var(--sand); }
 .notes-input::placeholder { color: var(--muted); }
-.notes-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.notes-row { display: flex; align-items: center; gap: 10px; margin-top: 0; order: 2; }
 .notes-save {
   font: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
-  background: var(--sand); border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  background: var(--sand); border: none; border-radius: 6px; padding: 4px 12px; cursor: pointer;
 }
 .notes-save:hover { filter: brightness(1.08); }
 .notes-status { font-size: 12.5px; color: var(--muted); }
@@ -218,10 +219,11 @@ main { padding: 8px 24px 24px; max-width: 1240px; margin: 0 auto; }
    left edge + deep teal panel so it reads as one block, distinct from the
    pink Sources-disagree box and the plain Sources URL line below it. */
 .guide-srcblock {
-  margin: 6px 0 0; padding: 6px 10px; background: #14303A;
+  margin: 4px 0 0; padding: 4px 10px; background: #14303A;
+  display: flex; flex-wrap: wrap; gap: 2px 14px;
   border: 1px solid var(--teal); border-left: 5px solid var(--teal); border-radius: 8px;
 }
-.guide-srcblock p { margin: 1px 0; font-size: 13.5px; }
+.guide-srcblock p { margin: 0; font-size: 13.5px; }
 .guide-srcblock p:first-child { margin-top: 0; }
 .guide-srcblock p:last-child { margin-bottom: 0; }
 .srcblock-facts b { color: var(--teal); }
@@ -229,13 +231,13 @@ main { padding: 8px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .srcblock-src { font-weight: 700; color: var(--cream); white-space: nowrap; }
 .guide-flag { margin: 6px 0 0; font-size: 12.5px; color: var(--sand); font-weight: 700; }
 .disagree-box {
-  margin: 6px 0 0; padding: 6px 10px; background: #2A1535;
+  margin: 4px 0 0; padding: 3px 10px; background: #2A1535;
   border: 1px solid var(--pink); border-radius: 8px;
 }
-.disagree-head { margin: 0 0 3px; font-weight: 800; color: #FFD7EA; font-size: 13px; }
-.disagree-side { margin: 2px 0; font-size: 13.5px; }
+.disagree-head { margin: 0 0 2px; font-weight: 800; color: #FFD7EA; font-size: 13px; }
+.disagree-side { margin: 1px 0; font-size: 13.5px; }
 .disagree-side b { color: var(--sand); }
-.disagree-note { margin: 3px 0 0; font-size: 12.5px; color: var(--muted); font-style: italic; }
+.disagree-note { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); font-style: italic; }
 .empty { color: var(--muted); padding: 24px; text-align: center; }
 
 /* Roadmap */
