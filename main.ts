@@ -12,7 +12,7 @@
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-frontend.ts';
@@ -20,9 +20,48 @@ import { buildDossier } from './vendor/makefun-frontend.ts';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
+// Pre-flight (M5, revisi ke-2 main.ts): fail the build with a clear message
+// before copying anything, so a bad data file or an over-cap screenshot can
+// never ship. Checks: trophies.json exists + parses + 55 trophies + every
+// guide non-empty; screenshots/ holds exactly 4 whole PNG/JPEG files, each
+// at most 256 KiB (262144 bytes, the scorer's screenshots cap).
+function preflightFail(msg: string): never {
+  throw new Error(`Vice City Platinum Log pre-flight FAILED: ${msg}`);
+}
+
+let trophyData;
+try {
+  trophyData = JSON.parse(readFileSync(join(here, 'app', 'data', 'trophies.json'), 'utf8'));
+} catch (err) {
+  preflightFail(`app/data/trophies.json is missing or not valid JSON (${(err as Error).message}).`);
+}
+if (!Array.isArray(trophyData.trophies) || trophyData.trophies.length !== 55) {
+  preflightFail(`app/data/trophies.json must hold 55 trophies, found ${Array.isArray(trophyData.trophies) ? trophyData.trophies.length : 'no trophies array'}.`);
+}
+const emptyGuides = trophyData.trophies
+  .filter((t) => typeof t.guide !== 'string' || !t.guide.trim())
+  .map((t) => t.id ?? t.name ?? '(unknown)');
+if (emptyGuides.length) {
+  preflightFail(`trophies with an empty guide: ${emptyGuides.join(', ')}.`);
+}
+
+const shotsDir = join(here, 'screenshots');
+if (!existsSync(shotsDir)) preflightFail('screenshots/ is missing — take the 4 screenshots first.');
+const shotFiles = readdirSync(shotsDir).filter((f) => /\.(png|jpe?g)$/i.test(f)).sort();
+if (shotFiles.length !== 4) {
+  preflightFail(`expected 4 screenshots in screenshots/, found ${shotFiles.length}: ${shotFiles.join(', ') || '(none)'}.`);
+}
+for (const f of shotFiles) {
+  const buf = readFileSync(join(shotsDir, f));
+  const isPng = buf.length > 4 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+  const isJpeg = buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+  if (!isPng && !isJpeg) preflightFail(`${f} is not a whole PNG or JPEG file.`);
+  if (buf.length > 262144) preflightFail(`${f} is ${buf.length} bytes — over the 256 KiB (262144 B) screenshots cap.`);
+}
+
 // Vice City Platinum Log: report the guide's trophy count at build time so a wrong data file is visible immediately.
-const trophyData = JSON.parse(readFileSync(join(here, 'app', 'data', 'trophies.json'), 'utf8'));
 console.log(`Vice City Platinum Log: ${trophyData.trophies.length} trophies, ${trophyData.sources.length} sources.`);
+console.log(`Pre-flight OK: 55 trophies with guides, 4 screenshots ≤256 KiB (${shotFiles.join(', ')}).`);
 
 mkdirSync(out, { recursive: true });
 cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });

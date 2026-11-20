@@ -1,0 +1,40 @@
+[
+  {
+    "file": "1-checklist.png",
+    "path": "/",
+    "tab": "checklist",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    }
+  },
+  {
+    "file": "2-roadmap.png",
+    "path": "/",
+    "tab": "roadmap",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    }
+  },
+  {
+    "file": "3-missables.png",
+    "path": "/",
+    "tab": "missables",
+    "scroll": 112,
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    }
+  },
+  {
+    "file": "4-sources.png",
+    "path": "/",
+    "tab": "sources",
+    "scroll": 112,
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    }
+  }
+]
