@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vice City Platinum Log — GTA VI Trophy Guide &amp; Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="title-block">
+    <h1>Vice City Platinum Log</h1>
+    <p class="tagline">55 trophy &middot; 1 platinum &middot; Vice City</p>
+    <p class="subline">Semua langkah bersitasi &mdash; yang belum dicek di game, ditulis belum dicek.</p>
+  </div>
+  <div class="progress-block" id="progress-block" aria-label="Progress">
+    <div class="progress-big"><span id="progress-count">0 / 55</span><span class="progress-label">earned</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="grade-bars" id="grade-bars"></div>
+    <div class="stage-bars" id="stage-bars"></div>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button type="button" role="tab" data-tab="checklist" aria-selected="true" class="active">Checklist</button>
+  <button type="button" role="tab" data-tab="roadmap" aria-selected="false">Roadmap</button>
+  <button type="button" role="tab" data-tab="missables" aria-selected="false">Missables</button>
+  <button type="button" role="tab" data-tab="sources" aria-selected="false">Sources</button>
+</nav>
+
+<main>
+  <section id="panel-checklist" class="panel active" role="tabpanel" aria-label="Checklist">
+    <div class="toolbar">
+      <label class="tool">Search <input id="search" type="search" placeholder="Search trophy name or description&hellip;" autocomplete="off"></label>
+      <label class="tool">Kind
+        <select id="kind">
+          <option value="all">All kinds</option>
+          <option value="story">Story</option>
+          <option value="missable">Missable</option>
+          <option value="collectible">Collectibles</option>
+          <option value="activity">Activities</option>
+        </select>
+      </label>
+      <label class="tool">Grade
+        <select id="grade">
+          <option value="all">All grades</option>
+          <option value="platinum">Platinum</option>
+          <option value="gold">Gold</option>
+          <option value="silver">Silver</option>
+          <option value="bronze">Bronze</option>
+        </select>
+      </label>
+      <label class="tool">Status
+        <select id="status">
+          <option value="all">All</option>
+          <option value="earned">Earned</option>
+          <option value="remaining">Remaining</option>
+        </select>
+      </label>
+      <label class="tool check"><input id="spoiler" type="checkbox" checked> Hide story spoilers</label>
+      <button id="export" type="button">Export progress</button>
+      <label class="tool import">Import progress <input id="import" type="file" accept="application/json,.json"></label>
+    </div>
+    <p id="list-count" class="list-count"></p>
+    <div id="list" class="trophy-list"></div>
+  </section>
+
+  <section id="panel-roadmap" class="panel" role="tabpanel" aria-label="Roadmap" hidden>
+    <div id="roadmap-summary" class="roadmap-summary"></div>
+    <ol id="roadmap-stages" class="roadmap-stages"></ol>
+  </section>
+
+  <section id="panel-missables" class="panel" role="tabpanel" aria-label="Missables" hidden>
+    <p class="panel-intro">Missable flags are built from the official trophy descriptions and the launch guides. One trophy is missable, three are on watch &mdash; the other 51 cannot be missed.</p>
+    <div id="missable-list" class="missable-list"></div>
+  </section>
+
+  <section id="panel-sources" class="panel" role="tabpanel" aria-label="Sources" hidden>
+    <p class="panel-intro">Every guide step cites one of these sources by number. Full URLs live in <code>app/data/trophies.json</code>; this page stays offline and links out to nothing.</p>
+    <div id="audit-strip" class="audit-strip"></div>
+    <ol id="source-list" class="source-list"></ol>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>Vice City Platinum Log &mdash; an unofficial fan guide. No Rockstar logo or artwork. Trophy names, descriptions and grades are the official PlayStation list (Exophase / PSNProfiles, frozen 2026-11-18). Progress is stored only in this browser.</p>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
