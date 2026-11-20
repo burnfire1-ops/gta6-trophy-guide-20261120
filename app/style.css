@@ -45,9 +45,11 @@ a { color: var(--cyan); }
 .progress-big .progress-label { font-size: 14px; font-weight: 400; color: var(--muted); margin-left: 6px; }
 .progress-bar { height: 12px; background: var(--ink); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin: 6px 0 10px; }
 .progress-fill { height: 100%; background: var(--teal); transition: width .2s; }
-.grade-bars, .stage-bars { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.grade-bars, .stage-bars { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 11.5px; color: var(--muted); }
 .grade-bars b, .stage-bars b { color: var(--cream); font-weight: 600; }
-.mini-bar { display: inline-block; width: 52px; height: 6px; background: var(--ink); border-radius: 3px; overflow: hidden; vertical-align: middle; margin: 0 4px; }
+.mini-bar { display: inline-block; width: 44px; height: 6px; background: var(--ink); border-radius: 3px; overflow: hidden; vertical-align: middle; margin: 0 3px; }
+.next-up { margin: 10px 0 0; font-size: 13.5px; color: #E8DCF5; border-top: 1px solid var(--line); padding-top: 8px; }
+.next-up .next-label { color: var(--sand); font-weight: 800; text-transform: uppercase; font-size: 11.5px; letter-spacing: .5px; }
 .mini-bar i { display: block; height: 100%; background: var(--teal); }
 .dot-platinum { color: var(--cyan); } .dot-gold { color: var(--sand); }
 .dot-silver { color: var(--silver); } .dot-bronze { color: var(--bronze); }
@@ -127,8 +129,16 @@ main { padding: 16px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .cite { font-size: 12px; color: var(--cyan); font-weight: 700; white-space: nowrap; }
 .guide-detail .tips { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
 .guide-detail .tips li { margin-bottom: 3px; }
-.guide-sources { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.guide-sources { margin: 8px 0 0; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
 .guide-flag { margin: 6px 0 0; font-size: 12.5px; color: var(--sand); font-weight: 700; }
+.disagree-box {
+  margin: 10px 0 0; padding: 10px 12px; background: #2A1535;
+  border: 1px solid var(--pink); border-radius: 8px;
+}
+.disagree-head { margin: 0 0 6px; font-weight: 800; color: #FFD7EA; font-size: 13px; }
+.disagree-side { margin: 4px 0; font-size: 13.5px; }
+.disagree-side b { color: var(--sand); }
+.disagree-note { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); font-style: italic; }
 .empty { color: var(--muted); padding: 24px; text-align: center; }
 
 /* Roadmap */
@@ -208,5 +218,32 @@ main { padding: 16px 24px 24px; max-width: 1240px; margin: 0 auto; }
 .source-list .src-name { font-weight: 700; }
 .source-list .src-meta { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
 .source-list .src-covers { margin-top: 4px; color: #E8DCF5; font-size: 13.5px; }
+
+/* Source matrix (M4) */
+.matrix-table {
+  width: 100%; border-collapse: collapse; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 14px; margin-bottom: 14px;
+}
+.matrix-table th, .matrix-table td {
+  text-align: left; vertical-align: top; padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.matrix-table thead th {
+  background: var(--panel2); color: var(--sand); font-size: 12px;
+  text-transform: uppercase; letter-spacing: .4px; white-space: nowrap;
+}
+.matrix-table tbody tr:last-child td { border-bottom: none; }
+.matrix-table td:not(:first-child) { white-space: nowrap; }
+.matrix-covers { margin-top: 3px; font-size: 13px; color: var(--muted); font-weight: 400; }
+.matrix-url { margin-top: 3px; font-size: 12px; color: var(--cyan); overflow-wrap: anywhere; font-weight: 400; }
+
+/* Worked example (M4) */
+.worked-example {
+  background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--teal);
+  border-radius: 10px; padding: 14px 16px; margin-top: 14px;
+}
+.worked-example h2 { margin: 0 0 4px; font-size: 17px; }
+.worked-example > p { margin: 4px 0 0; font-size: 13.5px; color: var(--muted); }
+.worked-example .guide-detail { border-top: none; padding-top: 4px; }
 
 .site-footer { padding: 0 24px 20px; color: var(--muted); font-size: 12.5px; max-width: 1240px; margin: 0 auto; }

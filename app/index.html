@@ -19,6 +19,7 @@
     <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
     <div class="grade-bars" id="grade-bars"></div>
     <div class="stage-bars" id="stage-bars"></div>
+    <p class="next-up" id="next-up" aria-live="polite"></p>
   </div>
 </header>
 
@@ -77,9 +78,11 @@
   </section>
 
   <section id="panel-sources" class="panel" role="tabpanel" aria-label="Sources" hidden>
-    <p class="panel-intro">Every guide step cites one of these sources by number. Full URLs live in <code>app/data/trophies.json</code>; this page stays offline and links out to nothing.</p>
+    <p class="panel-intro">Every guide step cites one of these sources by number. URLs are printed as plain text — this page stays offline and links out to nothing.</p>
     <div id="audit-strip" class="audit-strip"></div>
+    <table id="source-matrix" class="matrix-table"></table>
     <ol id="source-list" class="source-list"></ol>
+    <div id="worked-example" class="worked-example"></div>
   </section>
 </main>
 

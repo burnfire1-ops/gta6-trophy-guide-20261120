@@ -63,6 +63,35 @@ function renderProgress() {
     const got = ts.filter((t) => earned.has(t.id)).length;
     return barHtml(STAGE_LABEL[s], got, ts.length);
   }).join('');
+
+  // Next Up planner (M4): the next unearned trophy, in roadmap order
+  // (stage first, then id). Reads only localStorage progress — nothing else.
+  const next = nextUpTrophy();
+  const nextEl = $('next-up');
+  nextEl.replaceChildren();
+  if (!next) {
+    nextEl.textContent = 'All 55 earned — Vice Got a Price! is yours.';
+  } else {
+    const label = document.createElement('span');
+    label.className = 'next-label';
+    label.textContent = 'Next up: ';
+    nextEl.append(label);
+    const name = document.createElement('b');
+    name.textContent = hiddenNow(next) ? 'Hidden trophy' : next.name;
+    const meta = document.createElement('span');
+    meta.textContent = ` — ${STAGE_LABEL[next.stage] || next.stage} · ${next.grade} · ${hiddenNow(next) ? 'earn to reveal' : next.description}`;
+    nextEl.append(name, meta);
+  }
+}
+
+function nextUpTrophy() {
+  for (const s of STAGE_ORDER) {
+    const t = trophies
+      .filter((x) => x.stage === s && !earned.has(x.id))
+      .sort((a, b) => a.id - b.id)[0];
+    if (t) return t;
+  }
+  return null;
 }
 
 function matchesFilters(t) {
@@ -130,15 +159,42 @@ function buildGuideDetail(t) {
     p.textContent = 'Belum dicek — this step is our own advice from the official description, not yet checked in the game.';
     d.append(p);
   }
-  if (t.disagree) {
-    const p = document.createElement('p');
-    p.className = 'guide-flag';
-    p.textContent = 'Sources disagree here — see both sides in the Sources tab before you commit.';
-    d.append(p);
+  if (t.disagree && DISAGREE_DETAIL[t.id]) {
+    const box = document.createElement('div');
+    box.className = 'disagree-box';
+    const h = document.createElement('p');
+    h.className = 'disagree-head';
+    h.textContent = 'Sources disagree — both sides:';
+    box.append(h);
+    for (const side of DISAGREE_DETAIL[t.id]) {
+      const p = document.createElement('p');
+      p.className = 'disagree-side';
+      const b = document.createElement('b');
+      b.textContent = `${side.side}: `;
+      p.append(b, document.createTextNode(`${side.text} `));
+      for (const c of side.cites) {
+        const cite = document.createElement('span');
+        cite.className = 'cite';
+        cite.textContent = `[${c}]`;
+        cite.title = sourceName(c);
+        p.append(cite, document.createTextNode(' '));
+      }
+      box.append(p);
+    }
+    const note = document.createElement('p');
+    note.className = 'disagree-note';
+    note.textContent = 'Treat both as rough ranges, not promises.';
+    box.append(note);
+    d.append(box);
   }
   const srcs = document.createElement('p');
   srcs.className = 'guide-sources';
-  srcs.textContent = `Sources: ${(t.sources || []).map((id) => `[${id}] ${sourceName(id)}`).join(' · ')}`;
+  // URLs as plain text, never <a href>: the app stays offline and the
+  // references gate forbids web links anywhere in app/.
+  srcs.textContent = `Sources: ${(t.sources || []).map((id) => {
+    const s = sources.find((x) => x.id === id);
+    return s ? `[${id}] ${s.name} — ${s.url}` : `[${id}]`;
+  }).join(' · ')}`;
   d.append(srcs);
   return d;
 }
@@ -310,6 +366,20 @@ const MISSABLE_DETAIL = {
   },
 };
 
+// Disagree detail (M4): when sources conflict, show BOTH sides, in our own
+// words, with the citations attached to each side. Paraphrased from the
+// disagreeing trophies' own steps/tips in trophies.json — nothing new claimed.
+const DISAGREE_DETAIL = {
+  1: [
+    { side: 'About 200 hours', text: 'KeenGamer puts the platinum at about 200 hours, and PowerPyx (via EGamers) agrees.', cites: [3, 7] },
+    { side: '300+ hours', text: 'Push Square warns the run can pass 300 hours once the 100% checklist is counted.', cites: [4] },
+  ],
+  14: [
+    { side: 'About 200 hours', text: 'KeenGamer puts 100% completion — and the platinum behind it — at about 200 hours.', cites: [3] },
+    { side: '300+ hours', text: 'Push Square warns the same checklist can take 300+ hours.', cites: [4] },
+  ],
+};
+
 function renderMissables() {
   const wrap = $('missable-list');
   wrap.replaceChildren();
@@ -402,15 +472,17 @@ function renderMissables() {
 }
 
 function renderSources() {
+  // Audit numbers, counted from trophies.json — never typed in by hand.
   const totalSteps = trophies.reduce((n, t) => n + (t.steps || []).length, 0);
   const totalCites = trophies.reduce((n, t) => n + (t.steps || []).reduce((m, s) => m + (s.cites || []).length, 0), 0);
-  const twoPlus = trophies.filter((t) => (t.steps || []).some((s) => (s.cites || []).length >= 2)).length;
+  const stepsTwoPlus = trophies.reduce(
+    (n, t) => n + (t.steps || []).filter((s) => (s.cites || []).length >= 2).length, 0);
   const unconfirmed = trophies.filter((t) => t.confirm_status === 'unconfirmed').length;
   $('audit-strip').innerHTML = '';
   const stats = [
     [`${totalSteps}`, 'cited steps'],
     [`${totalCites}`, 'citations in steps'],
-    [`${twoPlus}`, 'trophies backed by 2+ sources on at least one step'],
+    [`${stepsTwoPlus}`, 'steps backed by 2+ sources'],
     [`${sources.length}`, 'sources, read 20 Nov 2026'],
     [`${unconfirmed}`, 'trophies labelled belum dicek'],
   ];
@@ -422,6 +494,52 @@ function renderSources() {
     $('audit-strip').append(span);
   }
 
+  // Source matrix (M4): source × coverage — guides, steps and citations
+  // counted from the guides themselves.
+  const matrix = $('source-matrix');
+  matrix.replaceChildren();
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  for (const h of ['Source', 'Guides citing it (of 55)', 'Steps citing it', 'Citations', 'Read']) {
+    const th = document.createElement('th');
+    th.textContent = h;
+    headRow.append(th);
+  }
+  thead.append(headRow);
+  matrix.append(thead);
+  const tbody = document.createElement('tbody');
+  for (const src of sources) {
+    const guides = trophies.filter((t) => (t.sources || []).includes(src.id)).length;
+    const steps = trophies.reduce(
+      (n, t) => n + (t.steps || []).filter((s) => (s.cites || []).includes(src.id)).length, 0);
+    const cites = trophies.reduce(
+      (n, t) => n + (t.steps || []).reduce(
+        (m, s) => m + (s.cites || []).filter((c) => c === src.id).length, 0), 0);
+    const row = document.createElement('tr');
+    const name = document.createElement('td');
+    const b = document.createElement('b');
+    b.textContent = `[${src.id}] ${src.name}`;
+    const covers = document.createElement('div');
+    covers.className = 'matrix-covers';
+    covers.textContent = src.covers;
+    const url = document.createElement('div');
+    url.className = 'matrix-url';
+    url.textContent = src.url;
+    name.append(b, covers, url);
+    const g = document.createElement('td');
+    g.textContent = `${guides} / ${trophies.length}`;
+    const st = document.createElement('td');
+    st.textContent = String(steps);
+    const ci = document.createElement('td');
+    ci.textContent = String(cites);
+    const rd = document.createElement('td');
+    rd.textContent = src.read_date;
+    row.append(name, g, st, ci, rd);
+    tbody.append(row);
+  }
+  matrix.append(tbody);
+
+  // Per-source list kept below the matrix for the long-form coverage notes.
   const list = $('source-list');
   list.replaceChildren();
   for (const src of sources) {
@@ -439,6 +557,17 @@ function renderSources() {
     li.append(name, meta, covers);
     list.append(li);
   }
+
+  // Worked example (M4): one full guide, steps + citations visible, so the
+  // Sources tab itself proves what a cited step looks like. Trophy 1 also
+  // shows both sides of its disagreement.
+  const ex = $('worked-example');
+  ex.replaceChildren();
+  const h = document.createElement('h2');
+  h.textContent = 'Worked example — one guide, cited step by step';
+  const intro = document.createElement('p');
+  intro.textContent = 'Vice Got a Price! (platinum). Every step below carries its sources; where the sources disagree on time, both sides are shown.';
+  ex.append(h, intro, buildGuideDetail(byId.get(1)));
 }
 
 // Tabs
